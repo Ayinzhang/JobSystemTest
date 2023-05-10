@@ -462,7 +462,7 @@ public class OldDynamicBone : MonoBehaviour
         int loop = 1;
         float timeVar = 1;
         float dt = m_DeltaTime;
-        /*
+        
         if (m_UpdateMode == UpdateMode.Default)
         {
             if (m_UpdateRate > 0)
@@ -489,7 +489,7 @@ public class OldDynamicBone : MonoBehaviour
                 }
             }
         }
-        */
+        
         if (loop > 0)
         {
             for (int i = 0; i < loop; ++i)

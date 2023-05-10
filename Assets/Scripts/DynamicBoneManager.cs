@@ -29,6 +29,8 @@ namespace HighPerformanceDynamicBone
         /// </summary>
         public const int MaxParticleLimit = 20;
 
+        float deltaTime;
+
         [BurstCompile]
         private struct ColliderSetupJob : IJobParallelForTransform
         {
@@ -199,30 +201,6 @@ namespace HighPerformanceDynamicBone
                             particleInfo.TempWorldPosition += d * ((len - maxLen) / len);
                     }
                 }
-
-                // //与指定的非全局碰撞器进行计算，会过滤掉挂载的全局碰撞器防止重复计算
-                // NativeMultiHashMap<int, int>.Enumerator enumerator = BoneColliderMatchMap.GetValuesForKey(headIndex);
-                // while (enumerator.MoveNext())
-                // {
-                //     if (ColliderArray[enumerator.Current].IsGlobal) continue;
-                //     particleInfo.IsCollide =
-                //         DynamicBoneCollider.HandleCollision(ColliderArray[enumerator.Current],
-                //             ref particleInfo.TempWorldPosition,
-                //             in particleInfo.Radius);
-                // }
-                //
-                // //与所有的全局碰撞器进行计算
-                // for (int i = 0; i < ColliderArray.Length; i++)
-                // {
-                //     if (!ColliderArray[i].IsGlobal) continue;
-                //     particleInfo.IsCollide =
-                //         DynamicBoneCollider.HandleCollision(ColliderArray[i],
-                //             ref particleInfo.TempWorldPosition,
-                //             in particleInfo.Radius);
-                // }
-
-                
-                // particleInfo.WorldPosition = particleInfo.TempWorldPosition;
                 
                 float3 dd = parentParticleInfo.TempWorldPosition - particleInfo.TempWorldPosition;
                 float leng = math.length(dd);
@@ -235,21 +213,6 @@ namespace HighPerformanceDynamicBone
                 ParticleArray[particleId] = particleInfo;
             }
         }
-
-        // [BurstCompile]
-        // private struct ApplyToTransformJob : IJobParallelForTransform
-        // {
-        //     public NativeArray<ParticleInfo> ParticleArray;
-        //
-        //     public void Execute(int index, TransformAccess transform)
-        //     {
-        //         ParticleInfo particleInfo = ParticleArray[index];
-        //         particleInfo.WorldPosition = particleInfo.TempWorldPosition;
-        //         transform.position = particleInfo.WorldPosition;
-        //         transform.rotation = particleInfo.WorldRotation;
-        //         ParticleArray[index] = particleInfo;
-        //     }
-        // }
         
         [BurstCompile]
         private struct ApplyToTransformJob : IJobParallelForTransform
@@ -300,7 +263,12 @@ namespace HighPerformanceDynamicBone
 
         private void LateUpdate()
         {
-            UpdateAll();
+            deltaTime += Time.deltaTime;
+            while (deltaTime > 1f / 60)
+            {
+                deltaTime -= 1f / 60;
+                UpdateAll(); 
+            }
         }
 
         private void UpdateAll()
@@ -374,13 +342,6 @@ namespace HighPerformanceDynamicBone
             {
                 particleTransformAccessArray.Add(target.ParticleTransformArray[i]);
             }
-
-            ////树状结构测试
-            // Debug.Log(target.ParticleInfoArray.Length);
-            // for (int i = 0; i < target.ParticleInfoArray.Length; i++)
-            // {
-            //     Debug.Log(target.ParticleInfoArray[i].ParentIndex);
-            // }
         }
 
 

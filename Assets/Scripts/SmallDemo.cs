@@ -9,24 +9,25 @@ public class SmallDemo : MonoBehaviour
     int dataCount = (int)1e7;
 
     float time;
-    Vector3[] a;
+    int3[] a;
     NativeArray<int3> b;
 
     void Start()
     {
-        a = new Vector3[dataCount];
+        a = new int3[dataCount];
         time = Time.realtimeSinceStartup;
         for (int i = 0; i < dataCount; ++i)
-            a[i] = new Vector3(i, i, i);
+            a[i] = new int3(i, i, i);
         Debug.Log("顺序直接赋值" + dataCount + "个用时" + (Time.realtimeSinceStartup - time) + "秒");
 
-        b = new NativeArray<int3>(dataCount, Allocator.Persistent);
+        b = new NativeArray<int3>(dataCount, Allocator.TempJob);
         CountInOrder countInOrder = new CountInOrder();
         countInOrder.data = b;
-        JobHandle handle = countInOrder.Schedule(dataCount, 64);
+        JobHandle orderHandle = countInOrder.Schedule(dataCount, 64);
         time = Time.realtimeSinceStartup;
-        handle.Complete();
+        orderHandle.Complete();
         Debug.Log("并行直接赋值" + dataCount + "个用时" + (Time.realtimeSinceStartup - time) + "秒");
+        b.Dispose();
     }
 
     [BurstCompile]
