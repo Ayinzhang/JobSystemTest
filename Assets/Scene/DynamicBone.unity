@@ -125,20 +125,17 @@ NavMeshSettings:
   m_NavMeshData: {fileID: 0}
 --- !u!4 &56292104 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400020, guid: 19015a5957bbaa745a61cba005220542,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 400020, guid: 19015a5957bbaa745a61cba005220542, type: 3}
   m_PrefabInstance: {fileID: 2137419079}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &361060927 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 100016, guid: 19015a5957bbaa745a61cba005220542,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 100016, guid: 19015a5957bbaa745a61cba005220542, type: 3}
   m_PrefabInstance: {fileID: 1426610664}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &361060928 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400016, guid: 19015a5957bbaa745a61cba005220542,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 400016, guid: 19015a5957bbaa745a61cba005220542, type: 3}
   m_PrefabInstance: {fileID: 1426610664}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &361060931
@@ -153,55 +150,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4e4cbfccdb95734d8bac50166033087, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rootBoneTransform: {fileID: 1869342389}
-  damping: 0.1
-  dampingDistribution:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  elasticity: 0.1
-  elasticityDistribution:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  stiffness: 0.1
-  stiffnessDistribution:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  inert: 0
-  inertDistribution:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  friction: 0
-  frictionDistribution:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  radius: 0
-  radiusDistribution:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  gravity: {x: 0, y: 0, z: 0}
-  force: {x: 0, y: 0, z: 0}
-  endLength: 0
-  endOffset: {x: 0, y: 0, z: 0}
-  colliderArray: []
-  exclusionTransformArray: []
+  m_Roots:
+  - {fileID: 1869342389}
+  m_UpdateRate: 60
+  m_Damping: 0.1
+  m_Elasticity: 0.1
+  m_Stiffness: 0.1
+  m_Inert: 0
 --- !u!1 &380608456
 GameObject:
   m_ObjectHideFlags: 0
@@ -236,14 +191,12 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &499157522 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 100016, guid: 19015a5957bbaa745a61cba005220542,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 100016, guid: 19015a5957bbaa745a61cba005220542, type: 3}
   m_PrefabInstance: {fileID: 2137419079}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &499157523 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400016, guid: 19015a5957bbaa745a61cba005220542,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 400016, guid: 19015a5957bbaa745a61cba005220542, type: 3}
   m_PrefabInstance: {fileID: 2137419079}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &499157524
@@ -258,8 +211,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9ac8d30c6a0d9642a11e5be4c440740, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Root: {fileID: 56292104}
-  m_Roots: []
+  m_Root: {fileID: 0}
+  m_Roots:
+  - {fileID: 56292104}
   m_UpdateRate: 60
   m_UpdateMode: 3
   m_Damping: 0.1
@@ -646,8 +600,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: 19015a5957bbaa745a61cba005220542, type: 3}
 --- !u!4 &1869342389 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400020, guid: 19015a5957bbaa745a61cba005220542,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 400020, guid: 19015a5957bbaa745a61cba005220542, type: 3}
   m_PrefabInstance: {fileID: 1426610664}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2137419079

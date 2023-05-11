@@ -54,10 +54,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\DynamicBone.cs" />
-    <Compile Include="Assets\Scripts\DynamicBoneManager.cs" />
-    <Compile Include="Assets\Scripts\DynamicBoneCollider.cs" />
     <Compile Include="Assets\Scripts\OldDynamicBone.cs" />
-    <Compile Include="Assets\Scripts\Util.cs" />
     <Compile Include="Assets\Scripts\SmallDemo.cs" />
   </ItemGroup>
   <ItemGroup>
