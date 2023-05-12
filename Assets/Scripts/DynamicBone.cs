@@ -3,81 +3,94 @@ using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Jobs;
 using System.Collections.Generic;
 
-public class DynamicBone : MonoBehaviour
+namespace DynamicBone
 {
-    public List<Transform> m_Roots = null;
-    public float m_UpdateRate = 60.0f;
-    [Range(0, 1)]
-    public float m_Damping = 0.1f;
-    [Range(0, 1)]
-    public float m_Elasticity = 0.1f;
-    [Range(0, 1)]
-    public float m_Stiffness = 0.1f;
-    [Range(0, 1)]
-    public float m_Inert = 0;
-    // prepare data
-    float m_DeltaTime = 0;
-    
-    struct Particle
+    public struct Particle
     {
-        public Transform m_Transform;
         public int m_ParentIndex;
-        public int m_ChildCount;
 
         public float3 m_Position;
         public float3 m_PrevPosition;
+        public float3 m_LocalPosition;
         public float3 m_InitLocalPosition;
-        public Quaternion m_InitLocalRotation;
-        
+        public quaternion m_Rotation;
+        public quaternion m_PrevRotation;
+        public quaternion m_LocalRotation;
+        public quaternion m_InitLocalRotation;
+    }
+
+    public class DynamicBone : MonoBehaviour
+    {
+        public Transform m_Root = null;
+        public float m_UpdateRate = 60.0f;
+        [Range(0, 1)]
+        public float m_Damping = 0.1f;
+        [Range(0, 1)]
+        public float m_Elasticity = 0.1f;
+        [Range(0, 1)]
+        public float m_Stiffness = 0.1f;
+        [Range(0, 1)]
+        public float m_Inert = 0;
         // prepare data
-        public float3 m_TransformPosition;
-        public float3 m_TransformLocalPosition;
-        public float4x4 m_TransformLocalToWorldMatrix;
-    }
+        int m_Size = 0;
+        float m_DeltaTime = 0;
 
-    struct ParticleTree
-    {
-        public Transform m_Root;
-        public float3 m_LocalGravity;
-        public float4x4 m_RootWorldToLocalMatrix;
-        public List<Particle> m_Particles;
-    }
+        NativeArray<Particle> m_Particles;
+        Transform[] m_Transforms;
 
-    List<ParticleTree> m_ParticleTrees;
+        void Start()
+        {
+            m_Size = m_Root.gameObject.GetComponentsInChildren<Transform>().Length;
+            m_Particles = new NativeArray<Particle>(m_Size, Allocator.Persistent);
+            m_Transforms = new Transform[m_Size];
 
-    void Start()
-    {
-        if (m_Roots != null)
-            for (int i = 0; i < m_Roots.Count; ++i)
-                AppendParticleTree(m_Roots[i]);
+            AppendParticles(m_Root, -1);
+        }
 
-        for (int i = 0; i < m_ParticleTrees.Count; ++i)
-            AppendParticles(m_ParticleTrees[i], m_ParticleTrees[i].m_Root, -1, 0);
-    }
+        void AppendParticles(Transform b, int parentIndex)
+        {
+            var p = new Particle();
 
-    void AppendParticleTree(Transform root)
-    {
-        var pt = new ParticleTree();
-        pt.m_Root = root;
-        pt.m_RootWorldToLocalMatrix = root.worldToLocalMatrix;
-        m_ParticleTrees.Add(pt);
-    }
+            p.m_ParentIndex = parentIndex;
+            p.m_Position = p.m_PrevPosition = b.position;
+            p.m_LocalPosition = p.m_InitLocalPosition = b.localPosition;
+            p.m_Rotation = p.m_PrevRotation = b.rotation;
+            p.m_LocalRotation = p.m_InitLocalRotation = b.localRotation;
 
-    void AppendParticles(ParticleTree pt, Transform b, int parentIndex, float boneLength)
-    {
-        var p = new Particle();
+            int index = parentIndex + 1;
+            m_Particles[index] = p; m_Transforms[index] = b;
 
-        p.m_Transform = b; p.m_ParentIndex = parentIndex;
-        p.m_Position = p.m_PrevPosition = b.position;
-        p.m_InitLocalPosition = b.localPosition;
-        p.m_InitLocalRotation = b.localRotation;
+            for (int i = 0; i < b.childCount; ++i)
+                AppendParticles(b.GetChild(i), index);
+        }
 
-        int index = pt.m_Particles.Count;
-        pt.m_Particles.Add(p);
-        
-        for (int i = 0; i < b.childCount; ++i)
-            AppendParticles(pt, b.GetChild(i), index, boneLength);   
+        void Update()
+        {
+            InitTransforms initTransforms = new InitTransforms();
+            initTransforms.ps = m_Particles;
+            JobHandle handle = initTransforms.Schedule(m_Size, 4);
+            handle.Complete();
+        }
+
+        [BurstCompile]
+        struct InitTransforms : IJobParallelFor
+        {
+            public NativeArray<Particle> ps;
+
+            public void Execute(int i)
+            {
+                var p = ps[i]; 
+                p.m_LocalPosition = p.m_InitLocalPosition;
+                p.m_LocalRotation = p.m_InitLocalRotation;
+            }
+        }
+
+        void OnDestroy()
+        {
+            m_Particles.Dispose();
+        }
     }
 }

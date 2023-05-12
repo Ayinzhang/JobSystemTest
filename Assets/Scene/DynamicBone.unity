@@ -150,8 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4e4cbfccdb95734d8bac50166033087, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Roots:
-  - {fileID: 1869342389}
+  m_Root: {fileID: 1869342389}
   m_UpdateRate: 60
   m_Damping: 0.1
   m_Elasticity: 0.1
@@ -211,7 +210,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9ac8d30c6a0d9642a11e5be4c440740, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Root: {fileID: 0}
+  m_Root: {fileID: 56292104}
   m_Roots:
   - {fileID: 56292104}
   m_UpdateRate: 60
