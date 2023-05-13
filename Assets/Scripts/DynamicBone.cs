@@ -11,7 +11,9 @@ namespace DynamicBone
     public struct Particle
     {
         public int m_ParentIndex;
-
+        public float m_Damping;
+        public float m_Elasticity;
+        public float m_Stiffness;
         public float3 m_Position;
         public float3 m_PrevPosition;
         public float3 m_LocalPosition;
@@ -32,8 +34,6 @@ namespace DynamicBone
         public float m_Elasticity = 0.1f;
         [Range(0, 1)]
         public float m_Stiffness = 0.1f;
-        [Range(0, 1)]
-        public float m_Inert = 0;
         // prepare data
         int m_Size = 0;
         float m_DeltaTime = 0;
@@ -59,6 +59,7 @@ namespace DynamicBone
             var p = new Particle();
 
             p.m_ParentIndex = parentIndex;
+            p.m_Damping = m_Damping;p.m_Elasticity = m_Elasticity;p.m_Stiffness = m_Stiffness;
             p.m_Position = p.m_PrevPosition = b.position;
             p.m_LocalPosition = p.m_InitLocalPosition = b.localPosition;
             p.m_Rotation = p.m_PrevRotation = b.rotation;
@@ -98,9 +99,65 @@ namespace DynamicBone
             m_ObjectMove = (float3)transform.position - m_ObjectPrevPosition;
             m_ObjectPrevPosition = transform.position;
 
-            //Prepare();
-            //UpdateParticles();
+            int loop = 1;
+
+            if (m_UpdateRate > 0)
+            {
+                float frameTime = 1.0f / m_UpdateRate;
+                m_DeltaTime += Time.deltaTime;
+                loop = 0;
+
+                while (m_DeltaTime >= frameTime)
+                {
+                    m_DeltaTime -= frameTime;
+                    if (++loop >= 3)
+                    {
+                        m_DeltaTime = 0;
+                        break;
+                    }
+                }
+            }
+
+            if (loop > 0)
+            {
+                for (int i = 0; i < loop; ++i)
+                {
+                    UpdateParticles1 updateParticles1 = new UpdateParticles1();
+                    updateParticles1.ps = m_Particles; m_TransformArray = new TransformAccessArray(m_Transforms);
+                    JobHandle handle = updateParticles1.Schedule(m_TransformArray);
+                    handle.Complete();
+                    //UpdateParticles2();
+                }
+            }
+            else
+            {
+                //SkipUpdateParticles();
+            }
+
             //ApplyParticlesToTransforms();
+        }
+
+        [BurstCompile]
+        struct UpdateParticles1 : IJobParallelForTransform
+        {
+            public NativeArray<Particle> ps;
+
+            public void Execute(int i, TransformAccess t)
+            {
+                Particle p = ps[i];
+                if (p.m_ParentIndex >= 0)
+                {
+                    // verlet integration
+                    float3 v = p.m_Position - p.m_PrevPosition;
+                    p.m_PrevPosition = p.m_Position;
+                    p.m_Position += v * (1 - p.m_Damping);
+                }
+                else
+                {
+                    p.m_PrevPosition = p.m_Position;
+                    p.m_Position = t.position;
+                }
+            }
         }
 
         void OnDestroy()
