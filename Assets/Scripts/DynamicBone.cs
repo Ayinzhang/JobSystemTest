@@ -37,9 +37,13 @@ namespace DynamicBone
         // prepare data
         int m_Size = 0;
         float m_DeltaTime = 0;
+        float m_ObjectScale;
+        float3 m_ObjectMove;
+        float3 m_ObjectPrevPosition;
 
         NativeArray<Particle> m_Particles;
         Transform[] m_Transforms;
+        TransformAccessArray m_TransformArray;
 
         void Start()
         {
@@ -88,9 +92,21 @@ namespace DynamicBone
             }
         }
 
+        void LateUpdate()
+        {
+            m_ObjectScale = Mathf.Abs(transform.lossyScale.x);
+            m_ObjectMove = (float3)transform.position - m_ObjectPrevPosition;
+            m_ObjectPrevPosition = transform.position;
+
+            //Prepare();
+            //UpdateParticles();
+            //ApplyParticlesToTransforms();
+        }
+
         void OnDestroy()
         {
             m_Particles.Dispose();
+            m_TransformArray.Dispose();
         }
     }
 }
