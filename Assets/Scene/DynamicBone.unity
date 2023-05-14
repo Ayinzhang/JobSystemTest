@@ -155,7 +155,6 @@ MonoBehaviour:
   m_Damping: 0.1
   m_Elasticity: 0.1
   m_Stiffness: 0.1
-  m_Inert: 0
 --- !u!1 &380608456
 GameObject:
   m_ObjectHideFlags: 0

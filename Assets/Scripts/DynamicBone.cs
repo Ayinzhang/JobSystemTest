@@ -42,7 +42,7 @@ namespace DynamicBone
         int m_Size = 0;
         float m_DeltaTime = 0;
         float m_ObjectScale;
-        static float3 m_ObjectMove;
+        float3 m_ObjectMove;
         float3 m_ObjectPrevPosition;
 
         NativeArray<Particle> m_Particles;
@@ -76,38 +76,16 @@ namespace DynamicBone
                 AppendParticles(b.GetChild(i), index);
         }
 
-        void Update()
-        {
-            InitTransforms initTransforms = new InitTransforms();
-            initTransforms.ps = m_Particles;
-            JobHandle handle = initTransforms.Schedule(m_Size, 16);
-            handle.Complete();
-        }
-
-        [BurstCompile]
-        struct InitTransforms : IJobParallelFor
-        {
-            public NativeArray<Particle> ps;
-
-            public void Execute(int i)
-            {
-                var p = ps[i]; 
-                p.m_LocalPosition = p.m_InitLocalPosition;
-                p.m_LocalRotation = p.m_InitLocalRotation;
-            }
-        }
-
         void LateUpdate()
         {
-            //Prepare()
+            //InitTransforms() + Prepare()
             m_ObjectScale = Mathf.Abs(transform.lossyScale.x);
             m_ObjectMove = (float3)transform.position - m_ObjectPrevPosition;
             m_ObjectPrevPosition = transform.position;
 
             Prepare prepare = new Prepare();
             prepare.ps = m_Particles; m_TransformArray = new TransformAccessArray(m_Transforms);
-            JobHandle handle = prepare.Schedule(m_TransformArray);
-            handle.Complete();
+            JobHandle handle = prepare.Schedule(m_TransformArray); m_TransformArray.Dispose();
 
             //UpdateParticles()
             int loop = 1;
@@ -135,25 +113,25 @@ namespace DynamicBone
                 {
                     UpdateParticles1 updateParticles1 = new UpdateParticles1();
                     updateParticles1.ps = m_Particles;
-                    handle = updateParticles1.Schedule(m_Size, 16);
-                    handle.Complete();
+                    handle = updateParticles1.Schedule(m_Size, 16, handle);
 
                     UpdateParticles2 updateParticles2 = new UpdateParticles2();
                     updateParticles2.ps = m_Particles;
-                    handle = updateParticles2.Schedule(m_Size, 16);
-                    handle.Complete();
+                    handle = updateParticles2.Schedule(m_Size, 16, handle);
                 }
             }
             else
             {
                 SkipUpdateParticles skipUpdateParticles = new SkipUpdateParticles();
                 skipUpdateParticles.ps = m_Particles;
-                handle = skipUpdateParticles.Schedule(m_Size, 16);
-                handle.Complete();
+                handle = skipUpdateParticles.Schedule(m_Size, 16, handle);
             }
 
             //ApplyParticlesToTransforms();
-
+            ApplyParticlesToTransforms applyParticlesToTransforms = new ApplyParticlesToTransforms();
+            applyParticlesToTransforms.ps = m_Particles; m_TransformArray = new TransformAccessArray(m_Transforms);
+            handle = applyParticlesToTransforms.Schedule(m_TransformArray, handle); m_TransformArray.Dispose();
+            handle.Complete();
         }
 
         [BurstCompile]
@@ -164,6 +142,9 @@ namespace DynamicBone
             public void Execute(int i, TransformAccess t)
             {
                 Particle p = ps[i];
+                p.m_LocalPosition = p.m_InitLocalPosition;
+                p.m_LocalRotation = p.m_InitLocalRotation;
+
                 p.m_TransformPosition = t.position;
                 p.m_TransformLocalPosition = t.localPosition;
                 p.m_TransformLocalToWorldMatrix = t.localToWorldMatrix;
@@ -241,9 +222,6 @@ namespace DynamicBone
                 Particle p = ps[i];
                 if (p.m_ParentIndex >= 0)
                 {
-                    p.m_PrevPosition += m_ObjectMove;
-                    p.m_Position += m_ObjectMove;
-
                     Particle p0 = ps[p.m_ParentIndex];
 
                     float restLen;
@@ -278,74 +256,24 @@ namespace DynamicBone
             }
         }
 
-        void ApplyParticlesToTransforms()
+        [BurstCompile]
+        struct ApplyParticlesToTransforms : IJobParallelForTransform
         {
-            Vector3 ax = Vector3.right;
-            Vector3 ay = Vector3.up;
-            Vector3 az = Vector3.forward;
-            bool nx = false, ny = false, nz = false;
+            public NativeArray<Particle> ps;
 
-#if !UNITY_5_4_OR_NEWER
-        // detect negative scale
-        Vector3 lossyScale = transform.lossyScale;
-        if (lossyScale.x < 0 || lossyScale.y < 0 || lossyScale.z < 0)
-        {
-            Transform mirrorObject = transform;
-            do
+            public void Execute(int i, TransformAccess t)
             {
-                Vector3 ls = mirrorObject.localScale;
-                nx = ls.x < 0;
-                if (nx)
-                    ax = mirrorObject.right;
-                ny = ls.y < 0;
-                if (ny)
-                    ay = mirrorObject.up;
-                nz = ls.z < 0;
-                if (nz)
-                    az = mirrorObject.forward;
-                if (nx || ny || nz)
-                    break;
-
-                mirrorObject = mirrorObject.parent;
-            }
-            while (mirrorObject != null);
-        }
-#endif
-
-            for (int i = 0; i < m_ParticleTrees.Count; ++i)
-            {
-                ApplyParticlesToTransforms(m_ParticleTrees[i], ax, ay, az, nx, ny, nz);
-            }
-        }
-
-        void ApplyParticlesToTransforms(Vector3 ax, Vector3 ay, Vector3 az, bool nx, bool ny, bool nz)
-        {
-            for (int i = 1; i < m_Particles.Count; ++i)
-            {
-                Particle p = m_Particles[i];
-                Particle p0 = m_Particles[p.m_ParentIndex];
-
-                if (p0.m_ChildCount <= 1)       // do not modify bone orientation if has more then one child
-                {
-                    Vector3 localPos;
-                    localPos = p.m_Transform.localPosition;
-                    Vector3 v0 = p0.m_Transform.TransformDirection(localPos);
-                    Vector3 v1 = p.m_Position - p0.m_Position;
-                    Quaternion rot = Quaternion.FromToRotation(v0, v1);
-                    p0.m_Transform.rotation = rot * p0.m_Transform.rotation;
-                }
-
-                if (p.m_TransformNotNull)
-                {
-                    p.m_Transform.position = p.m_Position;
-                }
+                Particle p = ps[i];
+                t.position = p.m_Position;
+                t.rotation = p.m_Rotation;
+                t.position += new Vector3(0.1f, 0, 0);
             }
         }
 
         void OnDestroy()
         {
-            m_Particles.Dispose();
-            m_TransformArray.Dispose();
+            if (m_Particles.IsCreated) m_Particles.Dispose();
+            if (m_TransformArray.isCreated) m_TransformArray.Dispose();
         }
     }
 }
