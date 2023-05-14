@@ -39,7 +39,7 @@ namespace DynamicBone
         [Range(0, 1)]
         public float m_Stiffness = 0.1f;
         // prepare data
-        int m_Size = 0;
+        int m_Size;
         float m_DeltaTime = 0;
         float m_ObjectScale;
         float3 m_ObjectMove;
@@ -47,7 +47,6 @@ namespace DynamicBone
 
         NativeArray<Particle> m_Particles;
         Transform[] m_Transforms;
-        TransformAccessArray m_TransformArray;
 
         void Start()
         {
@@ -84,7 +83,7 @@ namespace DynamicBone
             m_ObjectPrevPosition = transform.position;
 
             Prepare prepare = new Prepare();
-            prepare.ps = m_Particles; m_TransformArray = new TransformAccessArray(m_Transforms);
+            prepare.ps = m_Particles; TransformAccessArray m_TransformArray = new TransformAccessArray(m_Transforms);
             JobHandle handle = prepare.Schedule(m_TransformArray); m_TransformArray.Dispose();
 
             //UpdateParticles()
@@ -130,8 +129,8 @@ namespace DynamicBone
             //ApplyParticlesToTransforms();
             ApplyParticlesToTransforms applyParticlesToTransforms = new ApplyParticlesToTransforms();
             applyParticlesToTransforms.ps = m_Particles; m_TransformArray = new TransformAccessArray(m_Transforms);
-            handle = applyParticlesToTransforms.Schedule(m_TransformArray, handle); m_TransformArray.Dispose();
-            handle.Complete();
+            handle = applyParticlesToTransforms.Schedule(m_TransformArray, handle);
+            handle.Complete(); m_TransformArray.Dispose();
         }
 
         [BurstCompile]
@@ -142,8 +141,8 @@ namespace DynamicBone
             public void Execute(int i, TransformAccess t)
             {
                 Particle p = ps[i];
-                p.m_LocalPosition = p.m_InitLocalPosition;
-                p.m_LocalRotation = p.m_InitLocalRotation;
+                t.localPosition = p.m_InitLocalPosition;
+                t.localRotation = p.m_InitLocalRotation;
 
                 p.m_TransformPosition = t.position;
                 p.m_TransformLocalPosition = t.localPosition;
@@ -163,6 +162,7 @@ namespace DynamicBone
                 {
                     // verlet integration
                     float3 v = p.m_Position - p.m_PrevPosition;
+                    //print(v);
                     p.m_PrevPosition = p.m_Position;
                     p.m_Position += v * (1 - p.m_Damping);
                 }
@@ -190,7 +190,7 @@ namespace DynamicBone
                 restLen = math.length(p0.m_TransformPosition - p.m_TransformPosition);
 
                 // keep shape
-                float4x4 m0 = p0.m_TransformLocalToWorldMatrix;
+                float4x4 m0 = p.m_TransformLocalToWorldMatrix;
                 m0.c3.xyz = p0.m_Position;
                 float3 restPos;
                 restPos = math.mul(m0, new float4(p.m_TransformLocalPosition, 1)).xyz;
@@ -216,7 +216,7 @@ namespace DynamicBone
         struct SkipUpdateParticles : IJobParallelFor
         {
             public NativeArray<Particle> ps;
-
+            
             public void Execute(int i)
             {
                 Particle p = ps[i];
@@ -228,7 +228,7 @@ namespace DynamicBone
                     restLen = math.length(p0.m_TransformPosition - p.m_TransformPosition);
 
                     // keep shape
-                    float4x4 m0 = p0.m_TransformLocalToWorldMatrix;
+                    float4x4 m0 = p.m_TransformLocalToWorldMatrix;
                     m0.c3.xyz = p0.m_Position;
                     float3 restPos;
                     restPos = math.mul(m0, new float4(p.m_TransformLocalPosition, 1)).xyz;
@@ -266,14 +266,12 @@ namespace DynamicBone
                 Particle p = ps[i];
                 t.position = p.m_Position;
                 t.rotation = p.m_Rotation;
-                t.position += new Vector3(0.1f, 0, 0);
             }
         }
 
         void OnDestroy()
         {
             if (m_Particles.IsCreated) m_Particles.Dispose();
-            if (m_TransformArray.isCreated) m_TransformArray.Dispose();
         }
     }
 }
