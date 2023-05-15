@@ -41,12 +41,10 @@ namespace DynamicBone
         // prepare data
         int m_Size;
         float m_DeltaTime = 0;
-        float m_ObjectScale;
-        float3 m_ObjectMove;
-        float3 m_ObjectPrevPosition;
 
         NativeArray<Particle> m_Particles;
         Transform[] m_Transforms;
+        TransformAccessArray m_TransformArray;
 
         void Start()
         {
@@ -55,6 +53,7 @@ namespace DynamicBone
             m_Transforms = new Transform[m_Size];
 
             AppendParticles(m_Root, -1);
+            m_TransformArray = new TransformAccessArray(m_Transforms);
         }
 
         void AppendParticles(Transform b, int parentIndex)
@@ -78,16 +77,12 @@ namespace DynamicBone
         void LateUpdate()
         {
             //InitTransforms() + Prepare()
-            m_ObjectScale = Mathf.Abs(transform.lossyScale.x);
-            m_ObjectMove = (float3)transform.position - m_ObjectPrevPosition;
-            m_ObjectPrevPosition = transform.position;
-
             Prepare prepare = new Prepare();
-            prepare.ps = m_Particles; TransformAccessArray m_TransformArray = new TransformAccessArray(m_Transforms);
-            JobHandle handle = prepare.Schedule(m_TransformArray); m_TransformArray.Dispose();
+            prepare.ps = m_Particles; 
+            JobHandle handle = prepare.Schedule(m_TransformArray);
 
             //UpdateParticles()
-            int loop = 1;
+            int loop = 0;
 
             if (m_UpdateRate > 0)
             {
@@ -128,9 +123,9 @@ namespace DynamicBone
 
             //ApplyParticlesToTransforms();
             ApplyParticlesToTransforms applyParticlesToTransforms = new ApplyParticlesToTransforms();
-            applyParticlesToTransforms.ps = m_Particles; m_TransformArray = new TransformAccessArray(m_Transforms);
-            handle = applyParticlesToTransforms.Schedule(m_TransformArray, handle);
-            handle.Complete(); m_TransformArray.Dispose();
+            applyParticlesToTransforms.ps = m_Particles;
+            var handle = applyParticlesToTransforms.Schedule(m_TransformArray);
+            handle.Complete();
         }
 
         [BurstCompile]
@@ -162,7 +157,6 @@ namespace DynamicBone
                 {
                     // verlet integration
                     float3 v = p.m_Position - p.m_PrevPosition;
-                    //print(v);
                     p.m_PrevPosition = p.m_Position;
                     p.m_Position += v * (1 - p.m_Damping);
                 }
@@ -265,13 +259,13 @@ namespace DynamicBone
             {
                 Particle p = ps[i];
                 t.position = p.m_Position;
-                t.rotation = p.m_Rotation;
             }
         }
 
         void OnDestroy()
         {
             if (m_Particles.IsCreated) m_Particles.Dispose();
+            if (m_TransformArray.isCreated) m_TransformArray.Dispose();
         }
     }
 }
