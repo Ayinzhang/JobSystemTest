@@ -45,6 +45,7 @@ namespace DynamicBone
         NativeArray<Particle> m_Particles;
         Transform[] m_Transforms;
         TransformAccessArray m_TransformArray;
+        JobHandle handle;
 
         void Start()
         {
@@ -79,11 +80,11 @@ namespace DynamicBone
             //InitTransforms() + Prepare()
             Prepare prepare = new Prepare();
             prepare.ps = m_Particles; 
-            JobHandle handle = prepare.Schedule(m_TransformArray);
-
+            handle = prepare.Schedule(m_TransformArray);
+            
             //UpdateParticles()
             int loop = 0;
-
+            
             if (m_UpdateRate > 0)
             {
                 float frameTime = 1.0f / m_UpdateRate;
@@ -124,7 +125,7 @@ namespace DynamicBone
             //ApplyParticlesToTransforms();
             ApplyParticlesToTransforms applyParticlesToTransforms = new ApplyParticlesToTransforms();
             applyParticlesToTransforms.ps = m_Particles;
-            var handle = applyParticlesToTransforms.Schedule(m_TransformArray);
+            handle = applyParticlesToTransforms.Schedule(m_TransformArray, handle);
             handle.Complete();
         }
 
