@@ -53,7 +53,7 @@
     <UnityVersion>2020.3.21f1c1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\DynamicBone.cs" />
+    <Compile Include="Assets\Scripts\NewDynamicBone.cs" />
     <Compile Include="Assets\Scripts\OldDynamicBone.cs" />
     <Compile Include="Assets\Scripts\SmallDemo.cs" />
   </ItemGroup>
