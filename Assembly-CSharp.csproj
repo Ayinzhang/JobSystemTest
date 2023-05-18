@@ -53,9 +53,10 @@
     <UnityVersion>2020.3.21f1c1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\MyDynamicBone.cs" />
     <Compile Include="Assets\Scripts\NewDynamicBone.cs" />
-    <Compile Include="Assets\Scripts\OldDynamicBone.cs" />
     <Compile Include="Assets\Scripts\SmallDemo.cs" />
+    <Compile Include="Assets\Scripts\OldDynamicBone.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
