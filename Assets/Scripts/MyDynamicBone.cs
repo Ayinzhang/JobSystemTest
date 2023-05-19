@@ -103,13 +103,9 @@ public class MyDynamicBone : MonoBehaviour
         {
             for (int i = 0; i < loop; ++i)
             {
-                UpdateParticles1 updateParticles1 = new UpdateParticles1();
-                updateParticles1.ps = m_Particles;
-                handle = updateParticles1.Schedule(m_Size, 8, handle);
-
-                UpdateParticles2 updateParticles2 = new UpdateParticles2();
-                updateParticles2.ps = m_Particles;
-                handle = updateParticles2.Schedule(m_Size, 8, handle);
+                UpdateParticles updateParticles = new UpdateParticles();
+                updateParticles.ps = m_Particles;
+                handle = updateParticles.Schedule(m_Size, 8, handle);
             }
         }
         else
@@ -145,40 +141,27 @@ public class MyDynamicBone : MonoBehaviour
     }
 
     [BurstCompile]
-    struct UpdateParticles1 : IJobParallelFor
+    struct UpdateParticles : IJobParallelFor
     {
         public NativeArray<Particle> ps;
 
         public void Execute(int i)
         {
             Particle p = ps[i];
-            if (p.m_ParentIndex >= 0)
-            {
-                // verlet integration
-                float3 v = p.m_Position - p.m_PrevPosition;
-                p.m_PrevPosition = p.m_Position;
-                p.m_Position += v * (1 - p.m_Damping);
-            }
-            else
+
+            if (p.m_ParentIndex == -1)
             {
                 p.m_PrevPosition = p.m_Position;
                 p.m_Position = p.m_TransformPosition;
+                return; 
             }
-            ps[i] = p;
-        }
-    }
 
-    [BurstCompile]
-    struct UpdateParticles2 : IJobParallelFor
-    {
-        public NativeArray<Particle> ps;
-
-        public void Execute(int i)
-        {
-            if (i == 0) return;
-
-            Particle p = ps[i];
             Particle p0 = ps[p.m_ParentIndex];
+
+            // verlet integration
+            float3 v = p.m_Position - p.m_PrevPosition;
+            p.m_PrevPosition = p.m_Position;
+            p.m_Position += v * (1 - p.m_Damping);
 
             float restLen;
             restLen = math.length(p0.m_TransformPosition - p.m_TransformPosition);
@@ -260,6 +243,25 @@ public class MyDynamicBone : MonoBehaviour
         {
             Particle p = ps[i];
             t.position = p.m_Position;
+        }
+    }
+
+    [BurstCompile]
+    struct UpdateAll : IJobParallelForTransform
+    {
+        public NativeArray<Particle> ps;
+
+        public void Execute(int i, TransformAccess t)
+        {
+            Particle p = ps[i];
+            t.localPosition = p.m_InitLocalPosition;
+            t.localRotation = p.m_InitLocalRotation;
+
+            p.m_TransformPosition = t.position;
+            p.m_TransformLocalPosition = t.localPosition;
+            p.m_TransformLocalToWorldMatrix = t.localToWorldMatrix;
+
+            ps[i] = p;
         }
     }
 
