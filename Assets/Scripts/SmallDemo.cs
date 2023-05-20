@@ -12,7 +12,7 @@ public class SmallDemo : MonoBehaviour
     int3[] a;
     NativeArray<int3> b;
 
-    void Start()
+    void Update()
     {
         a = new int3[dataCount];
         time = Time.realtimeSinceStartup;
@@ -21,10 +21,8 @@ public class SmallDemo : MonoBehaviour
         Debug.Log("顺序直接赋值" + dataCount + "个用时" + (Time.realtimeSinceStartup - time) + "秒");
 
         b = new NativeArray<int3>(dataCount, Allocator.TempJob);
-        CountInOrder countInOrder = new CountInOrder();
-        countInOrder.data = b;
-        JobHandle orderHandle = countInOrder.Schedule(dataCount, 64);
         time = Time.realtimeSinceStartup;
+        JobHandle orderHandle = new CountInOrder() { data = b }.Schedule(dataCount, 64);
         orderHandle.Complete();
         Debug.Log("并行直接赋值" + dataCount + "个用时" + (Time.realtimeSinceStartup - time) + "秒");
         b.Dispose();
@@ -33,7 +31,7 @@ public class SmallDemo : MonoBehaviour
     [BurstCompile]
     struct CountInOrder : IJobParallelFor
     {
-        public NativeArray<int3> data;
+        [WriteOnly] public NativeArray<int3> data;
 
         public void Execute(int i)
         {

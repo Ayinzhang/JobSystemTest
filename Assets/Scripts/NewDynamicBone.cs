@@ -996,7 +996,7 @@ public class NewDynamicBone : MonoBehaviour
                     v1 = MirrorVector(v1, az);
 #endif
                 Quaternion rot = Quaternion.FromToRotation(v0, v1);
-                //p0.m_Transform.rotation = rot * p0.m_Transform.rotation;
+                p0.m_Transform.rotation = rot * p0.m_Transform.rotation;
             }
 
             if (p.m_TransformNotNull)

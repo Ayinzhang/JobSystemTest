@@ -246,25 +246,6 @@ public class MyDynamicBone : MonoBehaviour
         }
     }
 
-    [BurstCompile]
-    struct UpdateAll : IJobParallelForTransform
-    {
-        public NativeArray<Particle> ps;
-
-        public void Execute(int i, TransformAccess t)
-        {
-            Particle p = ps[i];
-            t.localPosition = p.m_InitLocalPosition;
-            t.localRotation = p.m_InitLocalRotation;
-
-            p.m_TransformPosition = t.position;
-            p.m_TransformLocalPosition = t.localPosition;
-            p.m_TransformLocalToWorldMatrix = t.localToWorldMatrix;
-
-            ps[i] = p;
-        }
-    }
-
     void OnDestroy()
     {
         if (m_Particles.IsCreated) m_Particles.Dispose();
