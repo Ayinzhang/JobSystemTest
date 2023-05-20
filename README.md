@@ -8,10 +8,10 @@
 
 *Scene 3 多线程化动态骨骼，对比性能*
 
-<div align=left>
-<img src="https://github.com/ayinzhang/JobSystemTest/blob/main/show.png" width = "70%" height = "70%" />
+<div align=center>
+<img src="https://github.com/ayinzhang/JobSystemTest/blob/main/show.png" width = "50%" height = "50%" />
 </div> 
 
 <div align=center>
-<img src="https://github.com/ayinzhang/JobSystemTest/blob/main/show1.png" width = "70%" height = "70%" />
+<img src="https://github.com/ayinzhang/JobSystemTest/blob/main/show1.png" width = "50%" height = "50%" />
 </div> 
