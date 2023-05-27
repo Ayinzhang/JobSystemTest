@@ -6,7 +6,7 @@
 
 *Scene 2 多线程化动态骨骼，对比效果*
 
-*Scene 3 多线程化动态骨骼，对比性能*
+*Scene 3 批处理化动态骨骼，对比性能*
 
 <div align=center>
 <img src="https://github.com/ayinzhang/JobSystemTest/blob/main/show.png" width = "50%" height = "50%" />

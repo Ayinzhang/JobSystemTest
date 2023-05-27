@@ -57,6 +57,7 @@
     <Compile Include="Assets\Scripts\OldDynamicBone.cs" />
     <Compile Include="Assets\Scripts\ManagePrefabs.cs" />
     <Compile Include="Assets\Scripts\NewDynamicBone.cs" />
+    <Compile Include="Assets\Scripts\JobManager.cs" />
     <Compile Include="Assets\Scripts\SmallDemo.cs" />
   </ItemGroup>
   <ItemGroup>
