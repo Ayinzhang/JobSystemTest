@@ -61,7 +61,7 @@ public class JobManager : MonoBehaviour
             for (int i = 0; i < loop; ++i)
             { handle = new UpdateParticles() { ps = m_Particles }.Schedule(m_TransformArray.capacity, 8); handle.Complete(); }
         else
-        { handle = new SkipUpdateParticles() { ps = m_Particles }.Schedule(m_TransformArray.capacity, 8, handle); handle.Complete(); }
+        { handle = new SkipUpdateParticles() { ps = m_Particles }.Schedule(m_TransformArray.capacity, 8); handle.Complete(); }
 
         //ApplyParticlesToTransforms();
         handle = new ApplyParticlesToTransforms() { ps = m_Particles }.Schedule(m_TransformArray); handle.Complete();
